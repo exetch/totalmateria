@@ -8,9 +8,9 @@ import requests
 from loguru import logger
 from utils import cookies, headers
 
-logger.add("process_log_{time}.log", rotation="1 week")
+logger.add("logs/process_log_{time}.log", rotation="1 week")
 
-proxy_url = "http://qLvvO9:1BsTA1@185.220.35.151:30239"
+proxy_url = "http://cc5e904f65:61489d52c5@88.87.84.141:40778"
 def get_material_ids(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -54,7 +54,17 @@ def fetch_and_save_material_properties(material_id, properties_dir, cookies, hea
                     json.dump(response.json(), file, indent=4, ensure_ascii=False)
 
                 logger.info(f"Properties for material ID {material_id} ({prop_type}) fetched and saved at: {file_path}")
+                # Случайная задержка между запросами от 3 до 6 секунд
+                sleep_time = randint(1, 2)
+                logger.debug(f"Waiting for {sleep_time} seconds before the next request...")
+                time.sleep(sleep_time)
                 break
+
+            except requests.exceptions.ProxyError as proxy_err:
+                logger.warning(
+                    f"Proxy Error encountered while fetching properties for material ID {material_id}: {proxy_err}. Retrying in 4 seconds...")
+                time.sleep(4)
+
             except requests.exceptions.SSLError as ssl_err:
                 if attempt == 0:
                     logger.warning(

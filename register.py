@@ -8,7 +8,7 @@ import time
 import re
 import register_config
 
-proxy_url = "http://qLvvO9:1BsTA1@185.220.35.151:30239"
+proxy_url = "http://cc5e904f65:61489d52c5@88.87.84.141:40778"
 def generate_username(length=10):
     """ Генерирует случайное имя пользователя заданной длины. """
     characters = string.ascii_letters + string.digits
@@ -111,7 +111,7 @@ def register_and_access_platform(email):
         data = register_config.data
         data['ctl10$tb_email'] = email
         data['ctl10$tb_confirm_email'] = email
-        proxies = {"http": proxy_url, "https": proxy_url}
+        proxies = {"http": proxy_url}
 
         response = session.post('https://www.totalmateria.com/page.aspx', params=params, headers=headers, data=data, proxies=proxies)
         response.raise_for_status()
