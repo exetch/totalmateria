@@ -57,7 +57,7 @@ class MaterialDataProcessor:
                         json.dump(response.json(), file, indent=4, ensure_ascii=False)
 
                     logger.info(f"Properties for material ID {material_id} ({prop_type}) fetched and saved at: {file_path}")
-                    # Случайная задержка между запросами от 3 до 6 секунд
+                    # Случайная задержка между запросами
                     sleep_time = randint(1, 2)
                     logger.debug(f"Waiting for {sleep_time} seconds before the next request...")
                     time.sleep(sleep_time)
