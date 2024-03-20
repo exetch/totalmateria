@@ -1,5 +1,5 @@
 import os
-
+from pathlib import Path
 from loguru import logger
 from material_data_processor import MaterialDataProcessor
 from dotenv import load_dotenv
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     LOGIN_URL = 'https://www.totalmateria.com/page.aspx?ID=Login&LN=EN'
     START_URL = 'https://portal.totalmateria.com/en/search/quick'
     logger.add("logs/process_log_{time}.log", rotation="1 week")
-    project_root = 'C:\\Users\\ASUS\\PycharmProjects\\totalmateria\\base_directory'
+    project_root = Path(__file__).resolve().parent
     PROXY = os.getenv('PROXY')
     auto_login = LoginAutomation(EMAIL, PASSWORD, PROXY)
     while login_attempts < MAX_LOGIN_ATTEMPTS and not successful_login:
