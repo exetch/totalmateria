@@ -50,7 +50,7 @@ class MaterialDataProcessor:
 
                     if response.status_code == 401:
                         logger.info("Unauthorized access detected. Please re-login with new session cookies and headers.")
-                        return False
+                        return None
 
                     file_path = os.path.join(properties_dir, f'{material_id}_{prop_type}.json')
                     with open(file_path, 'w', encoding='utf-8') as file:
