@@ -10,16 +10,17 @@ if __name__ == "__main__":
     MAX_LOGIN_ATTEMPTS = 5
     login_attempts = 0
     successful_login = False
-    EMAIL = 'dentconwechsta1972@outlook.com'
-    PASSWORD = 'TK6JBWHS'
+    EMAIL = 'osipov2012vova82287o@rambler.ua'
+    PASSWORD = '1SG3V5DU'
     LOGIN_URL = 'https://www.totalmateria.com/page.aspx?ID=Login&LN=EN'
     START_URL = 'https://portal.totalmateria.com/en/search/quick'
     logger.add("logs/process_log_{time}.log", rotation="1 week")
     project_root = Path(__file__).resolve().parent
     PROXY = os.getenv('PROXY')
-    auto_login = LoginAutomation(EMAIL, PASSWORD, PROXY)
+
     while login_attempts < MAX_LOGIN_ATTEMPTS and not successful_login:
         try:
+            auto_login = LoginAutomation(EMAIL, PASSWORD, PROXY)
             cookies, headers = auto_login.login(LOGIN_URL, START_URL)
             if cookies and headers:
                 successful_login = True
