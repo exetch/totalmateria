@@ -34,8 +34,3 @@ if __name__ == "__main__":
 
     if not successful_login:
         logger.error("Не удалось залогиниться после нескольких попыток.")
-
-
-
-
-    processor.process_response_files()
