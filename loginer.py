@@ -34,11 +34,12 @@ class LoginAutomation:
             }
         }
 
-    def start_driver(self, headless=False):
+    def start_driver(self):
         """Инициализирует драйвер."""
         chrome_options = Options()
-        if headless:
-            chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--remote-debugging-port=9222")
+        # chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("start-maximized")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
@@ -86,7 +87,7 @@ class LoginAutomation:
             cookies_dict = {}
             for cookie in cookies:
                 cookies_dict[cookie['name']] = cookie['value']
-            logger.succes("Cookies после входа: {}", cookies_dict)
+            logger.success("Cookies после входа: {}", cookies_dict)
             for request in self.driver.requests:
                 if request.response and 'portal.totalmateria.com/identity/connect/token' in request.url:
                     response_body = request.response.body

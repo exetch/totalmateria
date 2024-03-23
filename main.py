@@ -40,7 +40,7 @@ if __name__ == "__main__":
             reger.start_driver()
             success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=PL'
             registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=PL'
-            # reger.registration(registration_url, success_reg_url)
+            reger.registration(registration_url, success_reg_url)
 
             logger.info("Ожидание письма...")
             time.sleep(10)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                     logger.success(f'Учетные данные сохранены: {login}')
 
                     # Запуск процесса логина и получения данных
-                    auto_login = LoginAutomation(login, password, PROXY, logger)
+                    auto_login = LoginAutomation(login, password, PROXY)
                     cookies, headers = auto_login.login(LOGIN_URL, START_URL, BAD_URL)
 
                     if cookies == 1 and headers == 2:
