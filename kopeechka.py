@@ -29,22 +29,23 @@ class KopeechkaClient:
         response.raise_for_status()
         return response.json()
 
-    def get_email(self, site, email_type='ALL'):
+    def get_email(self, site):
         email_type = random.choice(self.email_domains)
         url = f"{self.base_url}/mailbox-get-email?site={site}&mail_type={email_type}&token={self.api_token}&type=json&api=2.0"
         response = requests.get(url)
         response.raise_for_status()
         return response.json()
 
-    def get_message(self, sid, full=True):
-        full_param = 'FULL' if full else 'LIST'
-        url = f"{self.base_url}/mailbox-get-message?sid={sid}&token={self.api_token}&type=json&full={full_param}&api=2.0"
+    def get_message(self, ID):
+        full_param = '1'
+        url = f"{self.base_url}/mailbox-get-message?id={ID}&token={self.api_token}&type=json&full={full_param}&api=2.0"
+
         response = requests.get(url)
         response.raise_for_status()
         return response.json()
 
-    def cancel_email(self, sid):
-        url = f'{self.base_url}/mailbox-cancel?sid={sid}&token={self.api_token}&type=json&api=2.0'
+    def cancel_email(self, ID):
+        url = f'{self.base_url}/mailbox-cancel?id={ID}&token={self.api_token}&type=json&api=2.0'
         response = requests.get(url)
         response.raise_for_status()
         return response.json()

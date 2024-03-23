@@ -27,25 +27,25 @@ if __name__ == "__main__":
     project_root = os.path.join(current_dir, 'base_directory')
     PROXY = os.getenv('PROXY')
     api_token = os.getenv('KOPEECHKA_API')
-    site_to_register = 'totalmateria.com'
+    site_to_register = 'https://www.totalmateria.com/'
     filename = 'credentials.txt'
 
     while True:
         kopeechka_client = KopeechkaClient(api_token)
         email_response = kopeechka_client.get_email(site_to_register)
         email = email_response.get('mail')
-
+        logger.debug(email)
         if email:
             reger = RegistrationAutomation(email, PROXY, logger)
             reger.start_driver()
             success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=PL'
             registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=PL'
-            reger.registration(registration_url, success_reg_url)
+            # reger.registration(registration_url, success_reg_url)
 
             logger.info("Ожидание письма...")
             time.sleep(10)
             message_response = kopeechka_client.get_message(email_response.get('id'))
-
+            logger.debug(message_response)
             if email not in message_response.get('mail_body', ''):
                 logger.info("Письмо не найдено, отправка повторного запроса...")
                 time.sleep(10)

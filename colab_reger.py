@@ -26,20 +26,24 @@ if __name__ == "__main__":
     kopeechka_client = KopeechkaClient(api_token)
     try:
         email_response = kopeechka_client.get_email(site_to_register)
+        logger.debug(email_response)
         email = email_response.get('mail')
+        logger.debug(email)
         PROXY = os.getenv('PROXY')
 
         if email:
             reger = RegistrationAutomation(email, PROXY, logger)
-            reger.start_driver()
+            # reger.start_driver()
             success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=PL'
             registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=PL'
-            reger.registration(registration_url, success_reg_url)
+            # reger.registration(registration_url, success_reg_url)
 
             logger.info("Ожидание письма...")
             time.sleep(10)
-            message_response = kopeechka_client.get_message(email_response.get('id'))
-
+            key_id = email_response.get('id')
+            logger.debug(key_id)
+            message_response = kopeechka_client.get_message(key_id)
+            logger.debug(message_response)
             if email not in message_response.get('mail_body', ''):
                 logger.info("Письмо не найдено, отправка повторного запроса...")
                 time.sleep(10)

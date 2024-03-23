@@ -98,7 +98,6 @@ class RegistrationAutomation:
             profession_select_element = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, self.profession_field_id))
             )
-
             WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.ID, self.profession_field_id))
             )
@@ -108,11 +107,10 @@ class RegistrationAutomation:
             else:
                 options = [option.get_attribute("value") for option in profession_dropdown.options if
                            option.get_attribute("value").strip()]
-                # Убедитесь, что список опций не пустой, и исключите плейсхолдеры (например, value="0" или value="")
                 if not options:
                     self.logger.error("Список профессий пуст.")
                     return
-                random_value = random.choice(options[1:])  # Пропускаем первую опцию, если это плейсхолдер
+                random_value = random.choice(options[1:])
                 profession_dropdown.select_by_value(random_value)
                 self.logger.success(f"Профессия установлена успешно")
         except Exception as e:
@@ -124,33 +122,14 @@ class RegistrationAutomation:
             industry_select_element = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, self.industry_field_id))
             )
-            self.logger.info("Элемент селектора индустрии найден.")
 
             WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.ID, self.industry_field_id))
             )
-            self.logger.info("Элемент селектора индустрии кликабелен.")
-
             industry_dropdown = Select(industry_select_element)
-            self.logger.info("Элемент Select инициализирован.")
-
-            if industry_value is not None:
-                self.logger.info(f"Выбор индустрии по значению: {industry_value}")
-                industry_dropdown.select_by_value(industry_value)
-                self.logger.success("Индустрия установлена по предоставленному значению.")
-            else:
-                options = [option.get_attribute("value") for option in industry_dropdown.options if
-                           option.get_attribute("value").strip()]
-                self.logger.info(f"Найдено опций для выбора: {len(options)}")
-
-                if not options:
-                    self.logger.error("Список индустрий пуст.")
-                    return
-
-                random_value = random.choice(options[1:])  # Пропускаем первую опцию, если это плейсхолдер
-                self.logger.info(f"Выбор случайного значения индустрии: {random_value}")
-                industry_dropdown.select_by_value(random_value)
-                self.logger.success(f"Индустрия установлена успешно: {random_value}")
+            industry_value = "12"
+            industry_dropdown.select_by_value(industry_value)
+            self.logger.success("Индустрия 'Produkcja materiałów' успешно установлена.")
         except Exception as e:
             self.logger.error(f"Ошибка при установке индустрии: {e}")
 
@@ -214,8 +193,11 @@ class RegistrationAutomation:
         self.driver.find_element(By.ID, self.zip_field_id).send_keys(user_data['Postcode'])
         self.driver.find_element(By.ID, self.phone_filed_if).send_keys(user_data['Phone Number'])
         self.set_profession()
+        time.sleep(2)
         self.set_random_industry()
+        time.sleep(2)
         self.set_random_country()
+        time.sleep(2)
         self.select_checkboxes_except_other()
 
 
@@ -250,7 +232,9 @@ class RegistrationAutomation:
             )
             self.logger.info("Заполнение полей формы регистрации...")
             self.fill_out_form(self.user_data)
-            time.sleep(0.5)
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            self.logger.info("Прокрутка страницы вниз до конца.")
+            time.sleep(2)
             self.driver.find_element(By.ID, self.submit_field_id).click()
             WebDriverWait(self.driver, 20).until(
                 lambda driver: driver.current_url == success_url
