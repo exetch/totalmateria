@@ -171,7 +171,7 @@ class RegistrationAutomation:
         self.select_checkboxes_except_other()
 
 
-    def start_driver(self, headless=False):
+    def start_driver(self, headless=True):
         """Инициализирует драйвер."""
         chrome_options = Options()
         if headless:
