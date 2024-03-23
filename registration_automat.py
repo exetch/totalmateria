@@ -93,18 +93,45 @@ class RegistrationAutomation:
         return user
 
     def set_profession(self, profession_value=None):
-        profession_dropdown = Select(self.driver.find_element(By.ID, self.profession_field_id))
-        if profession_value is not None:
-            profession_dropdown.select_by_value(profession_value)
-        else:
-            random_value = random.randint(1, 10)
-            profession_dropdown.select_by_value(str(random_value))
+        try:
+            profession_select_element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, self.profession_field_id))
+            )
+
+            WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, self.profession_field_id))
+            )
+            profession_dropdown = Select(profession_select_element)
+            if profession_value is not None:
+                profession_dropdown.select_by_value(profession_value)
+            else:
+                options = [option.get_attribute("value") for option in profession_dropdown.options if
+                           option.get_attribute("value").strip()]
+                if not options:
+                    self.logger.error("Список профессий пуст.")
+                    return
+                random_value = random.choice(options[1:])
+                profession_dropdown.select_by_value(random_value)
+        except Exception as e:
+            self.logger.error(f"Ошибка при установке профессии: {e}")
 
     def set_random_industry(self):
-        industry_dropdown = Select(self.driver.find_element(By.ID, self.industry_field_id))
-        options = [option for option in industry_dropdown.options if option.get_attribute("value") != "0"]
-        random_choice = random.choice(options)
-        industry_dropdown.select_by_value(random_choice.get_attribute("value"))
+        try:
+            self.logger.info("Ожидание элемента селектора индустрии...")
+            industry_select_element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, self.industry_field_id))
+            )
+            WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.ID, self.industry_field_id)))
+            industry_select = Select(industry_select_element)
+            options = [option for option in industry_select.options if option.get_attribute("value") != "0"]
+            if not options:
+                self.logger.error("Список индустрий пуст.")
+                return
+            random_choice = random.choice(options)
+            industry_select.select_by_value(random_choice.get_attribute("value"))
+            self.logger.success("Успешно установлена индустрия.")
+        except Exception as e:
+            self.logger.error(f"Ошибка при установке индустрии: {e}")
 
     def set_random_country(self):
         try:
@@ -171,11 +198,12 @@ class RegistrationAutomation:
         self.select_checkboxes_except_other()
 
 
-    def start_driver(self, headless=True):
+    def start_driver(self):
         """Инициализирует драйвер."""
         chrome_options = Options()
-        if headless:
-            chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("start-maximized")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
