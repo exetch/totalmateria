@@ -29,10 +29,12 @@ if __name__ == "__main__":
     api_token = os.getenv('KOPEECHKA_API')
     site_to_register = 'https://www.totalmateria.com/'
     filename = 'credentials.txt'
+    attempts = 0
 
     while True:
         kopeechka_client = KopeechkaClient(api_token)
         email_response = kopeechka_client.get_email(site_to_register)
+        email_id = email_response.get('id')
         email = email_response.get('mail')
         logger.debug(email)
         if email:
@@ -44,13 +46,22 @@ if __name__ == "__main__":
 
             logger.info("Ожидание письма...")
             time.sleep(10)
-            message_response = kopeechka_client.get_message(email_response.get('id'))
+            message_response = kopeechka_client.get_message(email_id)
             logger.debug(message_response)
-            if email not in message_response.get('mail_body', ''):
+            while "WAIT_LINK" in message_response.get('status', '') and attempts < 3:
                 logger.info("Письмо не найдено, отправка повторного запроса...")
                 time.sleep(10)
-                message_response = kopeechka_client.get_message(email_response.get('id'))
+                message_response = kopeechka_client.get_message(email_id)
+                attempts += 1
 
+            if attempts == 3 and "WAIT_LINK" in message_response.get('status', ''):
+                logger.error("Письмо так и не было получено после трех попыток.")
+                kopeechka_client.cancel_email(email_id)
+                logger.info(f"Почтовый адрес {email} отменен.")
+                reger.close_driver()
+                break
+
+            # Обработка письма, если оно было получено
             if email in message_response.get('mail_body', ''):
                 html_content = message_response.get('mail_body')
                 login, password = kopeechka_client.extract_login_password(html_content)
@@ -81,3 +92,6 @@ if __name__ == "__main__":
             reger.close_driver()
         else:
             logger.error('Не удалось получить почтовый адрес.')
+            break
+
+
