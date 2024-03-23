@@ -94,6 +94,7 @@ class RegistrationAutomation:
 
     def set_profession(self, profession_value=None):
         try:
+            self.logger.info("Ожидание элемента селектора профессии...")
             profession_select_element = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, self.profession_field_id))
             )
@@ -107,29 +108,49 @@ class RegistrationAutomation:
             else:
                 options = [option.get_attribute("value") for option in profession_dropdown.options if
                            option.get_attribute("value").strip()]
+                # Убедитесь, что список опций не пустой, и исключите плейсхолдеры (например, value="0" или value="")
                 if not options:
                     self.logger.error("Список профессий пуст.")
                     return
-                random_value = random.choice(options[1:])
+                random_value = random.choice(options[1:])  # Пропускаем первую опцию, если это плейсхолдер
                 profession_dropdown.select_by_value(random_value)
+                self.logger.success(f"Профессия установлена успешно")
         except Exception as e:
             self.logger.error(f"Ошибка при установке профессии: {e}")
 
-    def set_random_industry(self):
+    def set_random_industry(self, industry_value=None):
         try:
-            self.logger.info("Ожидание элемента селектора индустрии...")
+            self.logger.info("Начало установки индустрии...")
             industry_select_element = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, self.industry_field_id))
             )
-            WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.ID, self.industry_field_id)))
-            industry_select = Select(industry_select_element)
-            options = [option for option in industry_select.options if option.get_attribute("value") != "0"]
-            if not options:
-                self.logger.error("Список индустрий пуст.")
-                return
-            random_choice = random.choice(options)
-            industry_select.select_by_value(random_choice.get_attribute("value"))
-            self.logger.success("Успешно установлена индустрия.")
+            self.logger.info("Элемент селектора индустрии найден.")
+
+            WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, self.industry_field_id))
+            )
+            self.logger.info("Элемент селектора индустрии кликабелен.")
+
+            industry_dropdown = Select(industry_select_element)
+            self.logger.info("Элемент Select инициализирован.")
+
+            if industry_value is not None:
+                self.logger.info(f"Выбор индустрии по значению: {industry_value}")
+                industry_dropdown.select_by_value(industry_value)
+                self.logger.success("Индустрия установлена по предоставленному значению.")
+            else:
+                options = [option.get_attribute("value") for option in industry_dropdown.options if
+                           option.get_attribute("value").strip()]
+                self.logger.info(f"Найдено опций для выбора: {len(options)}")
+
+                if not options:
+                    self.logger.error("Список индустрий пуст.")
+                    return
+
+                random_value = random.choice(options[1:])  # Пропускаем первую опцию, если это плейсхолдер
+                self.logger.info(f"Выбор случайного значения индустрии: {random_value}")
+                industry_dropdown.select_by_value(random_value)
+                self.logger.success(f"Индустрия установлена успешно: {random_value}")
         except Exception as e:
             self.logger.error(f"Ошибка при установке индустрии: {e}")
 
