@@ -46,8 +46,13 @@ class LoginAutomation:
         chrome_options.add_argument(f'user-agent={UserAgent().random}')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         self.driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=self.proxy_options)
+    def close_driver(self):
+        if self.driver:
+            self.driver.close()
+            self.driver.quit()
+            logger.info("Драйвер успешно закрыт.")
 
-    def login(self, login_url, start_url):
+    def login(self, login_url, start_url, bad_url):
         """Процесс логина на сайт."""
         try:
             logger.info("Запуск драйвера...")
@@ -70,7 +75,8 @@ class LoginAutomation:
             WebDriverWait(self.driver, 60).until(
                 lambda driver: driver.current_url != login_url
             )
-
+            if self.driver.current_url == bad_url:
+                return 1, 2
             logger.success("Успешный вход.")
             WebDriverWait(self.driver, 180).until(
                 lambda driver: driver.current_url == start_url
@@ -113,7 +119,7 @@ class LoginAutomation:
         except TimeoutException:
             logger.info("Превышено время ожидания входа на страницу")
         finally:
-            self.driver.quit()
+            self.close_driver()
 
 
 

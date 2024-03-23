@@ -5,35 +5,29 @@ from dotenv import load_dotenv
 from loguru import logger
 from kopeechka import KopeechkaClient
 from registration_automat import RegistrationAutomation
-from loginer import LoginAutomation
-from material_data_processor import MaterialDataProcessor
-
-def write_credentials_to_file(filename, login, password):
-    with open(filename, 'a') as file:
-        file.write('-------------------------\n')
-        file.write(f'{datetime.now()} - Получены учетные данные:\n')
-        file.write(f'Логин: {login}\n')
-        file.write(f'Пароль: {password}\n')
-        file.write('-------------------------\n\n')
 
 if __name__ == "__main__":
     logger.add("logs/process_log_{time}.log", rotation="1 week")
     load_dotenv()
 
-    LOGIN_URL = 'https://www.totalmateria.com/page.aspx?ID=Login&LN=PL'
-    START_URL = 'https://portal.totalmateria.com/pl/search/quick'
-    BAD_URL = 'https://www.totalmateria.com/page.aspx?ID=TrialConfirm&LN=PL'
-    current_dir = os.getcwd()
-    project_root = os.path.join(current_dir, 'base_directory')
-    PROXY = os.getenv('PROXY')
+    def write_credentials_to_file(filename, login, password):
+        with open(filename, 'a') as file:
+            file.write('-------------------------\n')
+            file.write(f'{datetime.now()} - Получены учетные данные:\n')
+            file.write(f'Логин: {login}\n')
+            file.write(f'Пароль: {password}\n')
+            file.write('-------------------------\n\n')
+
+
     api_token = os.getenv('KOPEECHKA_API')
     site_to_register = 'totalmateria.com'
     filename = 'credentials.txt'
 
-    while True:
-        kopeechka_client = KopeechkaClient(api_token)
+    kopeechka_client = KopeechkaClient(api_token)
+    try:
         email_response = kopeechka_client.get_email(site_to_register)
         email = email_response.get('mail')
+        PROXY = os.getenv('PROXY')
 
         if email:
             reger = RegistrationAutomation(email, PROXY, logger)
@@ -56,23 +50,8 @@ if __name__ == "__main__":
                 login, password = kopeechka_client.extract_login_password(html_content)
                 if login and password:
                     write_credentials_to_file(filename, login, password)
+                    kopeechka_client.cancel_email(email_response.get('id'))
                     logger.success(f'Учетные данные сохранены: {login}')
-
-                    # Запуск процесса логина и получения данных
-                    auto_login = LoginAutomation(login, password, PROXY, logger)
-                    cookies, headers = auto_login.login(LOGIN_URL, START_URL, BAD_URL)
-
-                    if cookies == 1 and headers == 2:
-                        logger.error("Пробный доступ к сайту закончился, нужно регистрировать новый аккаунт.")
-                        continue
-                    elif cookies is not None and headers is not None:
-                        processor = MaterialDataProcessor(PROXY, project_root, cookies, headers, logger)
-                        success = processor.process_response_files()
-                        if success:
-                            logger.info("Обработка данных успешно завершена.")
-                        else:
-                            logger.error("Ошибка при обработке данных.")
-                            break
                 else:
                     logger.warning('Логин или пароль не найдены в письме.')
             else:
@@ -81,3 +60,15 @@ if __name__ == "__main__":
             reger.close_driver()
         else:
             logger.error('Не удалось получить почтовый адрес.')
+    except Exception as e:
+        logger.error(f'Произошла ошибка в процессе регистрации: {e}')
+    finally:
+        if email_response and email_response.get('id'):
+            try:
+                cancel_response = kopeechka_client.cancel_email(email_response.get('id'))
+                logger.info(f'Почта {email} отменена: {cancel_response}')
+            except Exception as e:
+                logger.error(f'Произошла ошибка при отмене почты: {e}')
+
+        if 'reger' in locals():
+            reger.close_driver()
