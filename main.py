@@ -65,8 +65,8 @@ if __name__ == "__main__":
                 break
 
             # Обработка письма, если оно было получено
-            if email in message_response.get('mail_body', ''):
-                html_content = message_response.get('mail_body')
+            if message_response.get('status', '') == 'OK' and 'WAIT_LINK' not in message_response.get('value', ''):
+                html_content = message_response.get('value')
                 login, password = kopeechka_client.extract_login_password(html_content)
                 if login and password:
                     write_credentials_to_file(filename, login, password)
