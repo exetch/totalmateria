@@ -1,7 +1,8 @@
+import os
 import time
 from fake_useragent import UserAgent
 from selenium.common import TimeoutException
-from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -9,6 +10,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from faker import Faker
 import random
+from dotenv import load_dotenv
+from get_plugin import get_plugin
 
 russian_names = {
     "male": [
@@ -48,6 +51,14 @@ cities_base_postcodes = {
     "Ижевск": "426",
 }
 
+load_dotenv()
+
+PROXY_HOST = os.getenv('PROXY_HOST')
+PROXY_PORT = os.getenv('PROXY_PORT')
+PROXY_USER = os.getenv('PROXY_USER')
+PROXY_PASS = os.getenv('PROXY_PASS')
+PLUGIN_NAME = 'proxy_auth_plugin.zip'
+
 class RegistrationAutomation:
     def __init__(self, email, proxy, logger):
         self.email = email
@@ -66,11 +77,40 @@ class RegistrationAutomation:
         self.country_field_id = 'ctl10_ddl_country'
         self.submit_field_id = 'ctl10_btn_submit'
         self.logger = logger
-        self.proxy_options = {
-            'proxy': {
-                'http': proxy
-            }
-        }
+        # self.proxy_options = {
+        #     'proxy': {
+        #         'http': proxy
+        #     }
+        # }
+
+    def start_driver(self):
+        """Инициализирует драйвер с использованием расширения для прокси."""
+        if not os.path.isfile(PLUGIN_NAME):
+            get_plugin(PLUGIN_NAME, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
+        chrome_options = webdriver.ChromeOptions()
+        # chrome_options = Options()
+        # chrome_options.add_argument("--headless")
+        chrome_options.add_extension(PLUGIN_NAME)
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument('--ignore-certificate-errors-spki-list')
+        chrome_options.add_argument('--ignore-ssl-errors')
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("start-maximized")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_argument("--disable-blink-features")
+        chrome_options.add_argument(f'user-agent={UserAgent().random}')
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        self.driver = webdriver.Chrome(options=chrome_options)
+        # self.driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=self.proxy_options)
+
+    def close_driver(self):
+        if self.driver:
+            self.driver.close()
+            self.driver.quit()
+            self.logger.info("Драйвер успешно закрыт.")
+
+
     def generate_user_data(self):
         fake = Faker('ru_RU')
         gender = random.choice(["male", "female"])
@@ -199,29 +239,6 @@ class RegistrationAutomation:
         self.set_random_country()
         time.sleep(2)
         self.select_checkboxes_except_other()
-
-
-    def start_driver(self):
-        """Инициализирует драйвер."""
-        chrome_options = Options()
-        # chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument('--ignore-certificate-errors-spki-list')
-        chrome_options.add_argument('--ignore-ssl-errors')
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("start-maximized")
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option('useAutomationExtension', False)
-        chrome_options.add_argument("--disable-blink-features")
-        chrome_options.add_argument(f'user-agent={UserAgent().random}')
-        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-        self.driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=self.proxy_options)
-
-    def close_driver(self):
-        if self.driver:
-            self.driver.close()
-            self.driver.quit()
-            self.logger.info("Драйвер успешно закрыт.")
 
     def registration(self, login_url, success_url):
         """Процесс регистрации."""
