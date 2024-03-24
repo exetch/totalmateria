@@ -57,7 +57,7 @@ if __name__ == "__main__":
                 message_response = kopeechka_client.get_message(email_id)
                 attempts += 1
 
-            if attempts == 3 and "WAIT_LINK" in message_response.get('status', ''):
+            if attempts == 3 and "WAIT_LINK" in message_response.get('value', ''):
                 logger.error("Письмо так и не было получено после трех попыток.")
                 kopeechka_client.cancel_email(email_id)
                 logger.info(f"Почтовый адрес {email} отменен.")
@@ -65,8 +65,8 @@ if __name__ == "__main__":
                 break
 
             # Обработка письма, если оно было получено
-            if email in message_response.get('mail_body', ''):
-                html_content = message_response.get('mail_body')
+            if message_response.get('status', '') == 'OK':
+                html_content = message_response.get('fullmessage')
                 login, password = kopeechka_client.extract_login_password(html_content)
                 if login and password:
                     write_credentials_to_file(filename, login, password)
