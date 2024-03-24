@@ -89,7 +89,7 @@ class RegistrationAutomation:
             get_plugin(PLUGIN_NAME, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
         chrome_options = webdriver.ChromeOptions()
         # chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_extension(PLUGIN_NAME)
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument('--ignore-certificate-errors-spki-list')

@@ -4,7 +4,7 @@ import time
 from loguru import logger
 from fake_useragent import UserAgent
 from selenium.common import TimeoutException
-from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -12,10 +12,15 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from dotenv import load_dotenv
 
+from get_plugin import get_plugin
 
 logger.add("logs/process_log_{time}.log", rotation="1 week")
 load_dotenv()
-
+PROXY_HOST = os.getenv('PROXY_HOST')
+PROXY_PORT = os.getenv('PROXY_PORT')
+PROXY_USER = os.getenv('PROXY_USER')
+PROXY_PASS = os.getenv('PROXY_PASS')
+PLUGIN_NAME = 'proxy_auth_plugin.zip'
 
 class LoginAutomation:
     def __init__(self, email, password, proxy):
@@ -28,25 +33,29 @@ class LoginAutomation:
         self.email_field_id = "orderForm_tb_email"
         self.password_field_id = "orderForm_tb_password"
         self.submit_button_id = "orderForm_btn_login_KTM"
-        self.proxy_options = {
-            "proxy": {
-                "https": proxy
-            }
-        }
+        # self.proxy_options = {
+        #     "proxy": {
+        #         "https": proxy
+        #     }
+        # }
 
     def start_driver(self):
         """Инициализирует драйвер."""
-        chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        if not os.path.isfile(PLUGIN_NAME):
+            get_plugin(PLUGIN_NAME, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_extension(PLUGIN_NAME)
+        chrome_options.add_argument("--headless")
         # chrome_options.add_argument("--remote-debugging-port=9222")
-        # chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("start-maximized")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         chrome_options.add_argument("--disable-blink-features")
         chrome_options.add_argument(f'user-agent={UserAgent().random}')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-        self.driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=self.proxy_options)
+        self.driver = webdriver.Chrome(options=chrome_options)
+        # self.driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=self.proxy_options)
     def close_driver(self):
         if self.driver:
             self.driver.close()
