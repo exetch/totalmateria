@@ -51,7 +51,7 @@ if __name__ == "__main__":
             message_response = kopeechka_client.get_message(email_id)
             logger.debug(message_response)
             attempts = 0
-            while "WAIT_LINK" in message_response.get('status', '') and attempts < 3:
+            while "WAIT_LINK" in message_response.get('value', '') and attempts < 3:
                 logger.info("Письмо не найдено, отправка повторного запроса...")
                 time.sleep(10)
                 message_response = kopeechka_client.get_message(email_id)
