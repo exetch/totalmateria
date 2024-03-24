@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 from dotenv import load_dotenv
 from get_plugin import get_plugin
-from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -40,7 +40,7 @@ class TMLogger:
         options.add_experimental_option('useAutomationExtension', False)
         options.add_argument("--disable-blink-features")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        driver = webdriver.Chrome(options=options, seleniumwire_options=self.proxy_options)
+        driver = webdriver.Chrome(options=options)
         if self.user_agent:
             driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": self.user_agent})
         return driver

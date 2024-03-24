@@ -37,7 +37,7 @@ class LoginAutomation:
     def start_driver(self):
         """Инициализирует драйвер."""
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         # chrome_options.add_argument("--remote-debugging-port=9222")
         # chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("start-maximized")

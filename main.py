@@ -26,13 +26,15 @@ if __name__ == "__main__":
     current_dir = os.getcwd()
     project_root = os.path.join(current_dir, 'base_directory')
     PROXY = os.getenv('PROXY')
+
     api_token = os.getenv('KOPEECHKA_API')
     site_to_register = 'https://www.totalmateria.com/'
     filename = 'credentials.txt'
-    attempts = 0
+
 
     while True:
         kopeechka_client = KopeechkaClient(api_token)
+        logger.debug(PROXY)
         email_response = kopeechka_client.get_email(site_to_register)
         email_id = email_response.get('id')
         email = email_response.get('mail')
@@ -48,6 +50,7 @@ if __name__ == "__main__":
             time.sleep(10)
             message_response = kopeechka_client.get_message(email_id)
             logger.debug(message_response)
+            attempts = 0
             while "WAIT_LINK" in message_response.get('status', '') and attempts < 3:
                 logger.info("Письмо не найдено, отправка повторного запроса...")
                 time.sleep(10)
@@ -88,7 +91,6 @@ if __name__ == "__main__":
                     logger.warning('Логин или пароль не найдены в письме.')
             else:
                 logger.error('Письмо с учетными данными не было получено.')
-
             reger.close_driver()
         else:
             logger.error('Не удалось получить почтовый адрес.')

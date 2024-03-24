@@ -67,8 +67,8 @@ class RegistrationAutomation:
         self.submit_field_id = 'ctl10_btn_submit'
         self.logger = logger
         self.proxy_options = {
-            "proxy": {
-                "https": proxy
+            'proxy': {
+                'http': proxy
             }
         }
     def generate_user_data(self):
@@ -204,8 +204,10 @@ class RegistrationAutomation:
     def start_driver(self):
         """Инициализирует драйвер."""
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument('--ignore-certificate-errors-spki-list')
+        chrome_options.add_argument('--ignore-ssl-errors')
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("start-maximized")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -226,6 +228,8 @@ class RegistrationAutomation:
         try:
             self.logger.info("Запуск драйвера...")
             self.start_driver()
+            self.driver.get("https://2ip.ru/")  # Используйте сайт по вашему выбору
+            time.sleep(10)
             self.driver.get(login_url)
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, self.email_field_id))
