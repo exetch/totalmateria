@@ -20,7 +20,8 @@ PROXY_HOST = os.getenv('PROXY_HOST')
 PROXY_PORT = os.getenv('PROXY_PORT')
 PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
-PLUGIN_NAME = 'proxy_auth_plugin.zip'
+current_dir = os.getcwd()
+PLUGIN_NAME = os.path.join(current_dir, 'proxy_auth_plugin.zip')
 
 class LoginAutomation:
     def __init__(self, email, password, proxy):

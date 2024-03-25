@@ -57,7 +57,8 @@ PROXY_HOST = os.getenv('PROXY_HOST')
 PROXY_PORT = os.getenv('PROXY_PORT')
 PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
-PLUGIN_NAME = 'proxy_auth_plugin.zip'
+current_dir = os.getcwd()
+PLUGIN_NAME = os.path.join(current_dir, 'proxy_auth_plugin.zip')
 
 class RegistrationAutomation:
     def __init__(self, email, proxy, logger):
@@ -87,10 +88,11 @@ class RegistrationAutomation:
         """Инициализирует драйвер с использованием расширения для прокси."""
         if not os.path.isfile(PLUGIN_NAME):
             get_plugin(PLUGIN_NAME, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
-        chrome_options = webdriver.ChromeOptions()
+        chrome_options = Options()
+        chrome_options.add_extension(PLUGIN_NAME)
         # chrome_options = Options()
         chrome_options.add_argument("--headless")
-        chrome_options.add_extension(PLUGIN_NAME)
+
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument('--ignore-certificate-errors-spki-list')
         chrome_options.add_argument('--ignore-ssl-errors')

@@ -9,7 +9,8 @@ PROXY_HOST = os.getenv('PROXY_HOST')
 PROXY_PORT = os.getenv('PROXY_PORT')
 PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
-PLUGIN_NAME = 'proxy_auth_plugin.zip'
+current_dir = os.getcwd()
+PLUGIN_NAME = os.path.join(current_dir, 'proxy_auth_plugin.zip')
 
 def get_plugin(plugin_name, proxy_host, proxy_port, proxy_user, proxy_pass):
     manifest_json = """
@@ -67,25 +68,3 @@ def get_plugin(plugin_name, proxy_host, proxy_port, proxy_user, proxy_pass):
     with zipfile.ZipFile(plugin_name, 'w') as zp:
         zp.writestr('manifest.json', manifest_json)
         zp.writestr('background.js', background_js)
-
-class TMLogger:
-    def __init__(self, login, password, plugin_name, user_agent=None):
-        self.login = login
-        self.password = password
-        self.plugin_name = plugin_name
-        self.user_agent = user_agent
-
-    def get_driver(self):
-        if not os.path.isfile(self.plugin_name):
-            get_plugin(PLUGIN_NAME, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
-
-        options = webdriver.ChromeOptions()
-        options.add_argument("start-maximized")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option('useAutomationExtension', False)
-        options.add_argument("--disable-blink-features")
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        driver = webdriver.Chrome(options=options)
-        if self.user_agent:
-            driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": self.user_agent})
-        return driver
