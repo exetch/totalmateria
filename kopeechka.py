@@ -17,7 +17,7 @@ class KopeechkaClient:
             "outlook.in", "outlook.com.br", "outlook.cz", "outlook.sg", "outlook.com.ar",
             "outlook.co.th", "outlook.sk", "outlook.com.gr", "outlook.kr", "outlook.co.il",
             "outlook.lv", "outlook.hu", "outlook.ph", "outlook.com.tr", "outlook.com.vn",
-            "outlook.my", "mail.com", "email.com", "usa.com", "gmx.com",
+            "outlook.my", "mail.com", "email.com", "gmx.com",
             "caramail.com", "gmx.fr", "caramail.fr", "mail.ru", "bk.ru",
             "inbox.ru", "list.ru"
         ]

@@ -10,7 +10,7 @@ PROXY_PORT = os.getenv('PROXY_PORT')
 PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
 current_dir = os.getcwd()
-PLUGIN_NAME = os.path.join(current_dir, 'proxy_auth_plugin.zip')
+PLUGIN_NAME = 'proxy_auth_plugin.zip'
 
 def get_plugin(plugin_name, proxy_host, proxy_port, proxy_user, proxy_pass):
     manifest_json = """

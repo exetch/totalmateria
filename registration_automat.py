@@ -80,7 +80,9 @@ class RegistrationAutomation:
         self.logger = logger
         # self.proxy_options = {
         #     'proxy': {
-        #         'http': proxy
+        #         'http': proxy,
+        #         'https': proxy,
+        #         'no_proxy': 'localhost,127.0.0.1'  # excludes
         #     }
         # }
 
@@ -88,12 +90,11 @@ class RegistrationAutomation:
         """Инициализирует драйвер с использованием расширения для прокси."""
         if not os.path.isfile(PLUGIN_NAME):
             get_plugin(PLUGIN_NAME, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
-        chrome_options = Options()
-        chrome_options.add_extension(PLUGIN_NAME)
-        # chrome_options = Options()
-        chrome_options.add_argument("--headless")
 
-        chrome_options.add_argument("--no-sandbox")
+        chrome_options = webdriver.ChromeOptions()
+        # Указываем путь к расширению
+        chrome_options.add_extension(PLUGIN_NAME)
+        # chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument('--ignore-certificate-errors-spki-list')
         chrome_options.add_argument('--ignore-ssl-errors')
         chrome_options.add_argument("--disable-dev-shm-usage")
@@ -101,10 +102,12 @@ class RegistrationAutomation:
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         chrome_options.add_argument("--disable-blink-features")
-        chrome_options.add_argument(f'user-agent={UserAgent().random}')
+        # chrome_options.add_argument(f'user-agent={UserAgent().random}')
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36")
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+
         self.driver = webdriver.Chrome(options=chrome_options)
-        # self.driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=self.proxy_options)
 
     def close_driver(self):
         if self.driver:
