@@ -176,23 +176,17 @@ class RegistrationAutomationPyppeteer:
         await self.start_browser()
 
         try:
-            await self.page.goto('https://whoer.net/ru', timeout=30000)
-            # Ожидаем, когда IP-адрес будет виден на странице, или любой другой уникальный элемент страницы
-            await self.page.waitForSelector('.ip', {'timeout': 5000})
-            ip_address = await self.page.evaluate('() => document.querySelector(".ip").innerText')
-            print(f"Текущий IP-адрес: {ip_address}")
+            await self.page.goto('https://whoer.net/ru', timeout=60000)
+            time.sleep(20) # ждем 20 секунд
         except errors.TimeoutError:
-            print("Превышено время ожидания загрузки страницы 2ip.ru.")
-            # Здесь можно решить, стоит ли продолжать выполнение скрипта
-        except Exception as e:
-            print(f"Произошла ошибка при попытке получить IP-адрес: {e}")
+            print("Превышено время ожидания загрузки")
+
         try:
             await self.page.goto(login_url, timeout=30000)
         except errors.TimeoutError:
             print("Превышено время ожидания загрузки страницы.")
         await self.fill_out_form(self.user_data)
 
-        # Прокрутка страницы вниз до конца перед нажатием на кнопку
         await self.page.evaluate('window.scrollTo(0, document.body.scrollHeight);')
         await asyncio.sleep(2)
 
@@ -212,7 +206,7 @@ class RegistrationAutomationPyppeteer:
         except Exception as e:
             print(f"Произошла ошибка при ожидании завершения регистрации: {e}")
 
-        await asyncio.sleep(60)  # Время для демонстрации перед закрытием
+        await asyncio.sleep(60)
         await self.close_browser()
 
 if __name__ == "__main__":
