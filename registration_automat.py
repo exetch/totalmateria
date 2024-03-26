@@ -1,10 +1,8 @@
 import os
 import time
-from fake_useragent import UserAgent
 from selenium.common import TimeoutException
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -12,6 +10,8 @@ from faker import Faker
 import random
 from dotenv import load_dotenv
 from get_plugin import get_plugin
+from loguru import logger
+from browserforge.fingerprints import FingerprintGenerator
 
 russian_names = {
     "male": [
@@ -92,8 +92,9 @@ class RegistrationAutomation:
             get_plugin(PLUGIN_NAME, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
 
         chrome_options = webdriver.ChromeOptions()
-        # Указываем путь к расширению
+        # chrome_options.add_argument("--headless")
         chrome_options.add_extension(PLUGIN_NAME)
+
         # chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument('--ignore-certificate-errors-spki-list')
         chrome_options.add_argument('--ignore-ssl-errors')
@@ -101,7 +102,6 @@ class RegistrationAutomation:
         chrome_options.add_argument("start-maximized")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
-        chrome_options.add_argument("--disable-blink-features")
         # chrome_options.add_argument(f'user-agent={UserAgent().random}')
         chrome_options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36")
@@ -250,7 +250,7 @@ class RegistrationAutomation:
         try:
             self.logger.info("Запуск драйвера...")
             self.start_driver()
-            self.driver.get("https://2ip.ru/")  # Используйте сайт по вашему выбору
+            self.driver.get("https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html")  # Используйте сайт по вашему выбору
             time.sleep(10)
             self.driver.get(login_url)
             WebDriverWait(self.driver, 10).until(
@@ -270,3 +270,14 @@ class RegistrationAutomation:
             self.logger.info("Превышено время ожидания входа на страницу")
         finally:
             self.close_driver()
+
+if __name__ == "__main__":
+    logger.add("logs/process_log_{time}.log", rotation="1 week")
+    load_dotenv()
+    fingerprints = FingerprintGenerator()
+    print(fingerprints.generate())
+    # reger = RegistrationAutomation('example@mail.com', 'PROXY', logger)
+    # reger.start_driver()
+    # success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=PL'
+    # registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=PL'
+    # reger.registration(registration_url, success_reg_url)
