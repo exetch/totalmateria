@@ -84,7 +84,7 @@ class RegistrationAutomationPyppeteer:
         })
 
         fingerprint_generator = FingerprintGenerator()
-        fingerprint = fingerprint_generator.generate()
+        fingerprint = fingerprint_generator.generate(browser='safari', os='ios')
 
         self.page = await NewPage(self.browser, fingerprint=fingerprint)
 
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=PL'
     registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=PL'
-    email = 'baronebmfd4@gmail.com'
+    email = 'barbarahaharrisba@gmail.com'
     print(PROXY)
     print()
     registration = RegistrationAutomationPyppeteer(email, PROXY, PROXY_USER, PROXY_PASS)
