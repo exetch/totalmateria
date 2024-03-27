@@ -113,7 +113,6 @@ class LoginAutomation:
                         'Accept-Language': 'ru-RU,ru;q=0.9',
                         'Authorization': f'Bearer {token}',
                         'Connection': 'keep-alive',
-                        # 'Cookie': '_ga=GA1.1.1830800357.1710769040; _hjSession_939928=eyJpZCI6ImM5OGQwMDhhLTM1NTctNDI0Mi04MWNkLTNjYzNiZGYxZjEyMiIsImMiOjE3MTA3NjkwNDI5OTgsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjoxLCJzcCI6MH0=; _hjSessionUser_939928=eyJpZCI6IjFjMGRhNDVmLWI3ZTAtNWY2Ni05Y2QwLWM4NmVlODJmZTRlNiIsImNyZWF0ZWQiOjE3MTA3NjkwNDI5OTYsImV4aXN0aW5nIjp0cnVlfQ==; idsrv.session=F06C1D75D793AFCDFB9C286BA25A8A75; totalmateria.session=CfDJ8DXxndW5yTRJm_OXW-4I-xIGzl6hcJrS7v3_IJri4NyUxJPE6Ihlz5tv-huSpdpFMOnsMPoEAHV3JQmPpD4dx_jqKY8JMGRXoPrBdFtmFXb1r8g5SssGaL6IE1W98RdwANH6hehU0b9YceUYISgicmtQx5uoFk0XLvoP_9elXGeQJdQx5U5pGW7hvETa7yxkl3OFJ9-NEEo34Ry52o3Z0iJjTsciJozb8w9UXwunDS_GizJRPWt3Ca7bHxGR7JNTnexg7e9nnmYsPM54wl1uwpaVch81MIY5MQ2Oi9NT5y3Po5fwyVtEf79U8B3_y1uTlUAtj7fOYHlDYZ_v6GOVF91WaBaUZtIjaZdwoj1wNqOKoSmqR3ulbEDRcUpCDMAl8G5lpoEmZZLiT0Ij5FfY9nS7xyk7IzK9Xz13Un8Zu4At5vw0j8As-zV8jvb5K9Jr1Lsih1JTx9sn9xW-NXUPtw_9oLoPqd9AWg9RLkf4bI29z9IREYBA5CUQS7zLFYad1dzrospx8H4uhOTMLaEtdPqvTXpDFkDljgaI4NggYcdH2KcO4ciGtEjTQtm9dEfBw8xIG9LHN-UC3mq3t73Wu8jSZWIzB7ddyT5-ESXID5uSRq74Ch3dwWUwzHhOJZ_x0PLO9rglOF9_NbuZTyX7Mona9EnSRdHh3jIJxAM4bXBZErLYUb9hN2G6k-HboWtYCyHopzaX65AeqA0GRHsh47o; _ga_CTW8QM09XY=GS1.1.1710769039.1.1.1710769260.8.0.0',
                         'Referer': 'https://portal.totalmateria.com/ru/search/quick/materials/5048801/mechanical',
                         'Sec-Fetch-Dest': 'empty',
                         'Sec-Fetch-Mode': 'cors',
@@ -137,12 +136,14 @@ class LoginAutomation:
 EMAIL = 'osipov2012vova82287o@rambler.ua'
 PASSWORD = '1SG3V5DU'
 CHECK_URL = 'https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html'
-LOGIN_URL = 'https://www.totalmateria.com/page.aspx?ID=Login&LN=EN'
+LOGIN_URL = 'https://www.totalmateria.com/page.aspx?ID=Login&LN=RU'
 START_URL = 'https://portal.totalmateria.com/en/search/quick'
+BAD_URL = 'https://www.totalmateria.com/page.aspx?ID=TrialConfirm&LN=RU'
+
 PROXY = os.getenv('PROXY')
 
 if __name__ == "__main__":
     driver = LoginAutomation(EMAIL, PASSWORD, PROXY)
-    driver.login(LOGIN_URL, START_URL)
+    driver.login(LOGIN_URL, START_URL, BAD_URL, TOKEN_URL)
 
 

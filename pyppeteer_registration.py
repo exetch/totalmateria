@@ -1,13 +1,10 @@
 import asyncio
 import os
-import time
-
 from dotenv import load_dotenv
-from pyppeteer import launch, errors
-from browserforge.fingerprints import FingerprintGenerator
-from browserforge.injectors.pyppeteer import NewPage
+from pyppeteer import errors
 from faker import Faker
 import random
+from loguru import logger
 
 
 russian_names = {
@@ -55,45 +52,13 @@ PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
 PROXY = PROXY_HOST + ':' + PROXY_PORT
 
+
 class RegistrationAutomationPyppeteer:
-    def __init__(self, email, proxy, username, password):
+    def __init__(self, custom_browser, email, logger):
+        self.custom_browser = custom_browser
         self.email = email
-        self.proxy = proxy
-        self.username = username
-        self.password = password
-        self.browser = None
-        self.page = None
+        self.logger = logger
         self.user_data = self.generate_user_data()
-
-    async def start_browser(self):
-        executable_path = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-        args = [
-            f'--proxy-server={self.proxy}',
-        ]
-
-        self.browser = await launch({
-            'headless': False,
-            'args': args,
-            'executablePath': executable_path,
-            'ignoreDefaultArgs': ["--enable-automation"],
-            'userDataDir': "./user_data",
-            # 'defaultViewport': None,
-            # 'devtools': True,
-            # 'ignoreHTTPSErrors': True,
-
-        })
-
-        fingerprint_generator = FingerprintGenerator()
-        fingerprint = fingerprint_generator.generate(browser='safari', os='ios')
-
-        self.page = await NewPage(self.browser, fingerprint=fingerprint)
-
-        # Аутентификация на прокси-сервере
-        await self.page.authenticate({'username': self.username, 'password': self.password})
-
-    async def close_browser(self):
-        await self.page.close()
-        await self.browser.close()
 
     def generate_user_data(self):
         fake = Faker('ru_RU')
@@ -112,50 +77,42 @@ class RegistrationAutomationPyppeteer:
         }
 
     async def fill_out_form(self, user_data):
-        await self.page.waitForSelector('#ctl10_tb_fname')
-        await self.page.type('#ctl10_tb_fname', user_data['Name'])
-        time.sleep(2)
-        await self.page.waitForSelector('#ctl10_tb_lname')
-        await self.page.type('#ctl10_tb_lname', user_data['Surname'])
-        time.sleep(2)
-        await self.page.waitForSelector('#ctl10_tb_email')
-        await self.page.type('#ctl10_tb_email', self.email)
-        time.sleep(2)
-        await self.page.waitForSelector('#ctl10_tb_confirm_email')
-        await self.page.type('#ctl10_tb_confirm_email', self.email)
-        time.sleep(2)
-        await self.page.waitForSelector('#ctl10_tb_company')
-        await self.page.type('#ctl10_tb_company', user_data['Company'])
-        time.sleep(2)
-        await self.page.waitForSelector('#ctl10_tb_city')
-        await self.page.type('#ctl10_tb_city', user_data['City'])
-        time.sleep(2)
-        await self.page.waitForSelector('#ctl10_tb_zip')
-        await self.page.type('#ctl10_tb_zip', user_data['Postcode'])
-        time.sleep(2)
-        await self.page.waitForSelector('#ctl10_tb_phone')
-        await self.page.type('#ctl10_tb_phone', user_data['Phone Number'])
-        time.sleep(2)
-        random_profession_value = str(random.randint(1, 10))
-        await self.page.waitForSelector('#ctl10_ddl_profession')
-        await self.page.select('#ctl10_ddl_profession', random_profession_value)
-        time.sleep(2)
-        random_industry_value = str(random.randint(1, 10))
-        await self.page.waitForSelector('#ctl10_ddl_industry')
-        await self.page.select('#ctl10_ddl_industry', random_industry_value)
-        time.sleep(2)
-        random_country_value = str(random.randint(1, 180))
-        await self.page.waitForSelector('#ctl10_ddl_country')
-        await self.page.select('#ctl10_ddl_country', random_country_value)
-        time.sleep(2)
-        try:
-            await self.page.waitForSelector(".cookie-popup-accept-cookies", {'timeout': 5000})
-            await self.page.click(".cookie-popup-accept-cookies")
-            print("Кнопка согласия куки нажата.")
-        except Exception as e:
-            print(f"Не удалось найти или нажать кнопку согласия на использование куки: {e}")
+        self.logger.info("Заполняем форму регистрации...")
+        page = self.custom_browser.page
 
-            # Выбор чекбоксов
+        fields = {
+            '#ctl10_tb_fname': user_data['Name'],
+            '#ctl10_tb_lname': user_data['Surname'],
+            '#ctl10_tb_email': self.email,
+            '#ctl10_tb_confirm_email': self.email,
+            '#ctl10_tb_company': user_data['Company'],
+            '#ctl10_tb_city': user_data['City'],
+            '#ctl10_tb_zip': user_data['Postcode'],
+            '#ctl10_tb_phone': user_data['Phone Number']
+        }
+
+        for selector, value in fields.items():
+            await page.waitForSelector(selector)
+            await page.type(selector, value)
+            await asyncio.sleep(1)
+
+        dropdowns = {
+            '#ctl10_ddl_profession': str(random.randint(1, 10)),
+            '#ctl10_ddl_industry': str(random.randint(1, 10)),
+            '#ctl10_ddl_country': str(random.randint(1, 180))
+        }
+        for selector, value in dropdowns.items():
+            await page.waitForSelector(selector)
+            await page.select(selector, value)
+            await asyncio.sleep(1)
+
+        try:
+            await page.waitForSelector(".cookie-popup-accept-cookies", {'timeout': 5000})
+            await page.click(".cookie-popup-accept-cookies")
+            self.logger.info("Кнопка сохранения cookie нажата")
+        except Exception as e:
+            self.logger.error(f"Не удалось найти или нажать кнопку согласия на использование куки: {e}")
+
         checkboxes_selectors = [
             '#ctl10_cblSurveyAnswers_0',
             '#ctl10_cblSurveyAnswers_3',
@@ -165,57 +122,87 @@ class RegistrationAutomationPyppeteer:
         ]
         for selector in checkboxes_selectors:
             try:
-                await self.page.waitForSelector(selector, {'timeout': 5000})
-                await self.page.click(selector)
-                print(f"Чекбокс {selector} выбран.")
-                time.sleep(1)
+                await page.waitForSelector(selector, {'timeout': 5000})
+                await page.click(selector)
+                self.logger.info(f"Чекбокс {selector} выбран.")
+                await asyncio.sleep(1)
             except Exception as e:
-                print(f"Не удалось найти или выбрать чекбокс {selector}. Ошибка: {e}")
+                self.logger.error(f"Не удалось найти или выбрать чекбокс {selector}. Ошибка: {e}")
 
-    async def registration(self, login_url, success_url):
-        await self.start_browser()
+    async def check_registration_errors(self):
+        page = self.custom_browser.page
+        error_selectors = [
+            "ctl10_lbl_ErrorTitle",
+            "ctl10_lbl_error"
+        ]
+        errors_found = False
+        error_messages = []
+
+        for selector in error_selectors:
+            try:
+                await page.waitForSelector(f"#{selector}", {'visible': True, 'timeout': 5000})
+                actual_error_message = await page.evaluate(f'document.querySelector("#{selector}").innerText')
+                error_messages.append(actual_error_message)
+                errors_found = True
+            except errors.TimeoutError:
+                continue
+
+        if errors_found:
+            for message in error_messages:
+                self.logger.error(f"Ошибка регистрации: {message}")
+            return False
+
+        return True
+
+    async def registration(self, registration_url, success_url):
+        await self.custom_browser.start_browser()
 
         try:
-            await self.page.goto('https://whoer.net/ru', timeout=60000)
-            time.sleep(20) # ждем 20 секунд
+            await self.custom_browser.page.goto('https://2ip.ru', timeout=60000)
+
         except errors.TimeoutError:
             print("Превышено время ожидания загрузки")
-
         try:
-            await self.page.goto(login_url, timeout=30000)
+            await self.custom_browser.page.goto(registration_url, timeout=30000)
         except errors.TimeoutError:
-            print("Превышено время ожидания загрузки страницы.")
+            self.logger.error("Превышено время ожидания загрузки страницы.")
         await self.fill_out_form(self.user_data)
 
-        await self.page.evaluate('window.scrollTo(0, document.body.scrollHeight);')
+        await self.custom_browser.page.evaluate('window.scrollTo(0, document.body.scrollHeight);')
         await asyncio.sleep(2)
 
         submit_button_selector = '#ctl10_btn_submit'
-        await self.page.click(submit_button_selector)
+        await self.custom_browser.page.waitForSelector(submit_button_selector, {'timeout': 5000})
+        await self.custom_browser.page.click(submit_button_selector)
+        await asyncio.sleep(2)
+        self.logger.info(f"Кнопка 'Запросить' нажата.")
+
+        if not await self.check_registration_errors():
+            self.logger.eror("Обнаружены ошибки в форме.")
+            await self.custom_browser.close_browser()
+            return
 
         try:
-            await self.page.waitForNavigation({
-                'timeout': 20,
+            await self.custom_browser.waitForNavigation({
+                'timeout': 5000,
                 'waitUntil': 'networkidle0'
             })
-            current_url = self.page.url
+            current_url = self.custom_browser.url
             if current_url == success_url:
-                print("Регистрация успешно завершилась!")
+                self.logger.info(f"Регистрация успешно завершена.")
             else:
-                print("URL после регистрации не соответствует ожидаемому.")
+                self.logger.error("URL после регистрации не соответствует ожидаемому.")
         except Exception as e:
-            print(f"Произошла ошибка при ожидании завершения регистрации: {e}")
+            self.logger.error(f"Произошла ошибка при ожидании завершения регистрации: {e}")
 
-        await asyncio.sleep(60)
-        await self.close_browser()
+        await self.custom_browser.close_browser()
 
 if __name__ == "__main__":
-
-
-    success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=PL'
-    registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=PL'
-    email = 'barbarahaharrisba@gmail.com'
-    print(PROXY)
-    print()
-    registration = RegistrationAutomationPyppeteer(email, PROXY, PROXY_USER, PROXY_PASS)
-    asyncio.get_event_loop().run_until_complete(registration.registration(registration_url, success_reg_url))
+    logger.add("debug.log", format="{time} {level} {message}", level="DEBUG")
+    success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=RU'
+    registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=RU'
+    email = 'example@google.com'
+    fingerprint_manager = FingerprintManager(browser='safari', os='ios')
+    fingerprint = fingerprint_manager.generate_fingerprint()
+    reger = RegistrationAutomationPyppeteer(email, PROXY, PROXY_USER, PROXY_PASS, logger, fingerprint)
+    asyncio.get_event_loop().run_until_complete(reger.registration(registration_url, success_reg_url))
