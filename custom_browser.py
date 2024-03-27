@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 from browserforge.fingerprints import FingerprintGenerator
+from browserforge.fingerprints import Fingerprint
 from pyppeteer import launch
 from browserforge.injectors.pyppeteer import NewPage
 
@@ -21,7 +22,21 @@ class FingerprintManager:
 
         filepath = os.path.join(directory, f"{email}.json")
         with open(filepath, 'w') as file:
-            json.dump(fingerprint, file)
+            fingerprint_dict = {
+            'headers': fingerprint.headers,
+            'slim': fingerprint.slim,
+            'fonts': fingerprint.fonts,
+            'screen': str(fingerprint.screen),
+            'battery': fingerprint.battery,
+            'audioCodecs': fingerprint.audioCodecs,
+            'mockWebRTC': fingerprint.mockWebRTC,
+            'multimediaDevices': fingerprint.multimediaDevices,
+            'navigator': str(fingerprint.navigator),
+            'pluginsData': fingerprint.pluginsData,
+            'videoCard': str(fingerprint.videoCard),
+            'videoCodecs': fingerprint.videoCodecs,
+        }
+            json.dump(fingerprint_dict, file)
         print(f"Fingerprint сохранен в {filepath}.")
 
 class CustomBrowser:
@@ -48,25 +63,41 @@ class CustomBrowser:
         await self.page.authenticate({'username': self.proxy_username, 'password': self.proxy_password})
         self.logger.info("Аутентификация пройдена")
 
-    async def save_cookies(self, path="cookies.json"):
+    async def close_browser(self):
+        await self.page.close()
+        await self.browser.close()
+        self.logger.info("Браузер закрыт")
+
+    async def save_cookies(self, email):
+        directory = "cookies"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        filename = f"{email}.json"
+        filepath = os.path.join(directory, filename)
+
         try:
             cookies = await self.page.cookies()
-            with open(path, "w") as file:
+            with open(filepath, "w") as file:
                 json.dump(cookies, file)
-            self.logger.info("Куки сохранены в файл.")
+            self.logger.info(f"Куки сохранены в файл {filepath}.")
         except Exception as e:
-            self.logger.error(f"Ошибка при сохранении куки: {str(e)}")
+            self.logger.error(f"Ошибка при сохранении куки для {email}: {str(e)}")
 
-    async def load_cookies(self, path="cookies.json"):
-        if os.path.exists(path):
+    async def load_cookies(self, email):
+        directory = "cookies"
+        filename = f"{email}.json"
+        filepath = os.path.join(directory, filename)
+
+        if os.path.exists(filepath):
             try:
-                with open(path, "r") as file:
+                with open(filepath, "r") as file:
                     cookies = json.load(file)
                 for cookie in cookies:
                     await self.page.setCookie(cookie)
-                self.logger.info("Куки загружены из файла и установлены в браузер.")
+                self.logger.info(f"Куки загружены из файла {filepath} и установлены в браузер.")
             except Exception as e:
-                self.logger.error(f"Ошибка при загрузке куки: {str(e)}")
+                self.logger.error(f"Ошибка при загрузке куки для {email}: {str(e)}")
         else:
-            self.logger.info("Файл куки не найден.")
+            self.logger.info(f"Файл куки для {email} не найден.")
 

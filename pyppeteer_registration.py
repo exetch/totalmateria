@@ -73,7 +73,7 @@ class RegistrationAutomationPyppeteer:
             "Company": fake.company(),
             "City": city,
             "Postcode": full_postcode,
-            "Phone Number": fake.bothify(text='+7 (9##) ###-####'),
+            "Phone Number": fake.bothify(text='89#########'),
         }
 
     async def fill_out_form(self, user_data):
@@ -172,18 +172,22 @@ class RegistrationAutomationPyppeteer:
         await asyncio.sleep(2)
 
         submit_button_selector = '#ctl10_btn_submit'
-        await self.custom_browser.page.waitForSelector(submit_button_selector, {'timeout': 5000})
-        await self.custom_browser.page.click(submit_button_selector)
+        await self.custom_browser.page.waitForSelector(submit_button_selector, {'visible': True})
+        await self.custom_browser.page.evaluate(f'document.querySelector("{submit_button_selector}").scrollIntoView()')
+        await asyncio.sleep(1)
+        await self.custom_browser.page.evaluate(f'document.querySelector("{submit_button_selector}").click()')
+        # await self.custom_browser.page.waitForSelector(submit_button_selector, {'timeout': 5000})
+        # await self.custom_browser.page.click(submit_button_selector)
         await asyncio.sleep(2)
         self.logger.info(f"Кнопка 'Запросить' нажата.")
 
         if not await self.check_registration_errors():
-            self.logger.eror("Обнаружены ошибки в форме.")
-            await self.custom_browser.close_browser()
+            self.logger.error("Обнаружены ошибки в форме.")
+            # await self.custom_browser.close_browser()
             return
 
         try:
-            await self.custom_browser.waitForNavigation({
+            await self.custom_browser.page.waitForNavigation({
                 'timeout': 5000,
                 'waitUntil': 'networkidle0'
             })
@@ -195,14 +199,5 @@ class RegistrationAutomationPyppeteer:
         except Exception as e:
             self.logger.error(f"Произошла ошибка при ожидании завершения регистрации: {e}")
 
-        await self.custom_browser.close_browser()
+        # await self.custom_browser.close_browser()
 
-if __name__ == "__main__":
-    logger.add("debug.log", format="{time} {level} {message}", level="DEBUG")
-    success_reg_url = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=RU'
-    registration_url = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=RU'
-    email = 'example@google.com'
-    fingerprint_manager = FingerprintManager(browser='safari', os='ios')
-    fingerprint = fingerprint_manager.generate_fingerprint()
-    reger = RegistrationAutomationPyppeteer(email, PROXY, PROXY_USER, PROXY_PASS, logger, fingerprint)
-    asyncio.get_event_loop().run_until_complete(reger.registration(registration_url, success_reg_url))

@@ -58,8 +58,8 @@ class KopeechkaClient:
         return response.json()
 
     def extract_login_password(self, html_content):
-        login_pattern = r'Twój login to: <b>([^<]+)</b>'
-        password_pattern = r'Hasło: <b>([^<]+)</b>'
+        login_pattern = r'Ваше имя пользователя: <b>([^<]+)</b>'
+        password_pattern = r'Ваш пароль: <b>([^<]+)</b>'
 
         login_match = re.search(login_pattern, html_content)
         password_match = re.search(password_pattern, html_content)
