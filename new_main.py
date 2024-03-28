@@ -6,6 +6,7 @@ from datetime import datetime
 from kopeechka import KopeechkaClient
 from loguru import logger
 from custom_browser import CustomBrowser, FingerprintManager
+from material_data_processor import MaterialDataProcessor
 from pyppeteer_loginer import LoginAutomationPyppeteer
 from pyppeteer_registration import RegistrationAutomationPyppeteer
 from dotenv import load_dotenv
@@ -18,7 +19,7 @@ PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
 PROXY_SETTINGS = PROXY_HOST + ':' + PROXY_PORT
 CHROME_EXECUTABLE_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-
+PROXY_FOR_REQUSTS = PROXY_SETTINGS + '@' + PROXY_USER + ':' + PROXY_PASS
 fingerprint_manager = FingerprintManager(browser='safari', os='ios')
 fingerprint = fingerprint_manager.generate_fingerprint()
 
@@ -35,6 +36,8 @@ api_token = os.getenv('KOPEECHKA_API')
 kopeechka_client = KopeechkaClient(api_token)
 site_to_register = 'https://www.totalmateria.com/'
 filename = 'credentials.txt'
+current_dir = os.getcwd()
+project_root = os.path.join(current_dir, 'base_directory')
 
 def write_credentials_to_file(filename, login, password):
     with open(filename, 'a') as file:
@@ -54,7 +57,7 @@ async def main():
         registration_automation = RegistrationAutomationPyppeteer(custom_browser, email, logger)
         await registration_automation.registration(REGISTRATION_URL, SUCCESS_URL)
         logger.info("Ожидание письма...")
-        time.sleep(5)
+        time.sleep(10)
         message_response = kopeechka_client.get_message(email_id)
         attempts = 0
         while "WAIT_LINK" in message_response.get('value', '') and attempts < 3:
@@ -78,11 +81,19 @@ async def main():
                 logger.success(f'Учетные данные сохранены: {login}, {password}')
 
                 login_automation = LoginAutomationPyppeteer(custom_browser, login, password, logger)
-                cookies_dict, auth_token = await login_automation.login(LOGIN_URL, START_URL, BAD_URL, URL_KEYWORD)
+                cookies_dict, headers = await login_automation.login(LOGIN_URL, START_URL, BAD_URL, URL_KEYWORD)
 
-                # Сохраняем куки сразу после успешного логина, до закрытия браузера
-                if cookies_dict:
-                    await custom_browser.save_cookies(login)
+                if cookies_dict is not None and headers is not None:
+                    processor = MaterialDataProcessor(PROXY_FOR_REQUSTS, project_root, cookies_dict, headers, logger)
+                    success = processor.process_response_files()
+                    if success:
+                        logger.info("Обработка данных успешно завершена.")
+                    else:
+                        logger.error("Ошибка при обработке данных.")
+
+                # # Сохраняем куки сразу после успешного логина, до закрытия браузера
+                # if cookies_dict:
+                #     await custom_browser.save_cookies(login)
 
                 await custom_browser.close_browser()
 

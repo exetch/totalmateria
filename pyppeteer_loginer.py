@@ -66,13 +66,29 @@ class LoginAutomationPyppeteer:
                 self.logger.error("Access token не найден в LocalStorage.")
 
             cookies = await self.custom_browser.page.cookies()
-            cookies_dict = {cookie['name']: cookie['value'] for cookie in cookies}
+
 
             if self.auth_token:
                 self.logger.info(f"Токен авторизации успешно получен: {self.auth_token}")
+                headers_dict = {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'ru-RU,ru;q=0.9',
+                    'Authorization': f'Bearer {self.auth_token}',
+                    'Connection': 'keep-alive',
+                    'Referer': 'https://portal.totalmateria.com/ru/search/quick/materials/5048801/mechanical',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'UnitSystem': '0',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                    'ValueReturnMode': 'ActualAndFormattedValue',
+                    'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"',
+                }
             else:
                 self.logger.error("Токен авторизации не был получен.")
-            return cookies_dict, self.auth_token
+            return cookies, headers_dict
         except Exception as e:
             self.logger.error(f"Произошла ошибка во время процесса входа: {e}")
 
