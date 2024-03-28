@@ -106,12 +106,12 @@ class RegistrationAutomationPyppeteer:
             await page.select(selector, value)
             await asyncio.sleep(1)
 
-        try:
-            await page.waitForSelector(".cookie-popup-accept-cookies", {'timeout': 5000})
-            await page.click(".cookie-popup-accept-cookies")
-            self.logger.info("Кнопка сохранения cookie нажата")
-        except Exception as e:
-            self.logger.error(f"Не удалось найти или нажать кнопку согласия на использование куки: {e}")
+        # try:
+        #     await page.waitForSelector(".cookie-popup-accept-cookies", {'timeout': 5000})
+        #     await page.click(".cookie-popup-accept-cookies")
+        #     self.logger.info("Кнопка сохранения cookie нажата")
+        # except Exception as e:
+        #     self.logger.error(f"Не удалось найти или нажать кнопку согласия на использование куки: {e}")
 
         checkboxes_selectors = [
             '#ctl10_cblSurveyAnswers_0',

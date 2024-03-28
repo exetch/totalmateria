@@ -68,6 +68,7 @@ async def main():
             kopeechka_client.cancel_email(email_id)
             logger.info(f"Почтовый адрес {email} отменен.")
 
+
         # Обработка письма, если оно было получено
         if message_response.get('status', '') == 'OK':
             html_content = message_response.get('fullmessage')
@@ -75,7 +76,6 @@ async def main():
             if login and password:
                 write_credentials_to_file(filename, login, password)
                 logger.success(f'Учетные данные сохранены: {login}, {password}')
-
 
                 login_automation = LoginAutomationPyppeteer(custom_browser, login, password, logger)
                 cookies_dict, auth_token = await login_automation.login(LOGIN_URL, START_URL, BAD_URL, URL_KEYWORD)
