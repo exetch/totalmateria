@@ -183,12 +183,12 @@ class RegistrationAutomationPyppeteer:
 
         if not await self.check_registration_errors():
             self.logger.error("Обнаружены ошибки в форме.")
-            # await self.custom_browser.close_browser()
+            await self.custom_browser.close_browser()
             return
 
         try:
             await self.custom_browser.page.waitForNavigation({
-                'timeout': 5000,
+                'timeout': 10000,
                 'waitUntil': 'networkidle0'
             })
             current_url = self.custom_browser.url
@@ -199,5 +199,5 @@ class RegistrationAutomationPyppeteer:
         except Exception as e:
             self.logger.error(f"Произошла ошибка при ожидании завершения регистрации: {e}")
 
-        # await self.custom_browser.close_browser()
+        await self.custom_browser.close_browser()
 

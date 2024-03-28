@@ -93,8 +93,9 @@ class CustomBrowser:
             try:
                 with open(filepath, "r") as file:
                     cookies = json.load(file)
-                for cookie in cookies:
-                    await self.page.setCookie(cookie)
+                    # Преобразуем каждый куки в формат, принимаемый Pyppeteer
+                    for cookie in cookies:
+                        await self.page.setCookie(**cookie)
                 self.logger.info(f"Куки загружены из файла {filepath} и установлены в браузер.")
             except Exception as e:
                 self.logger.error(f"Ошибка при загрузке куки для {email}: {str(e)}")

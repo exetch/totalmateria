@@ -18,17 +18,13 @@ PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
 PROXY_SETTINGS = PROXY_HOST + ':' + PROXY_PORT
 CHROME_EXECUTABLE_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-# EMAIL = "AgeneLahanu@mail.com"
-# USERNAME = "testuser"
-# PASSWORD = "244I0PI4"
 
 fingerprint_manager = FingerprintManager(browser='safari', os='ios')
 fingerprint = fingerprint_manager.generate_fingerprint()
-# fingerprint_manager.save_fingerprint(EMAIL, fingerprint)
+
 # # Создаем экземпляр CustomBrowser
 custom_browser = CustomBrowser(PROXY_SETTINGS, PROXY_USER, PROXY_PASS, fingerprint, logger)
 
-# URL для регистрации и URL успеха (для проверки успешной регистрации)
 REGISTRATION_URL = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=RU'
 SUCCESS_URL = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=RU'
 LOGIN_URL = 'https://www.totalmateria.com/page.aspx?ID=Login&LN=RU'
@@ -49,52 +45,46 @@ def write_credentials_to_file(filename, login, password):
         file.write('-------------------------\n\n')
 
 async def main():
-    # kopeechka_client = KopeechkaClient(api_token)
-    # email_response = kopeechka_client.get_email(site_to_register)
-    # email_id = email_response.get('id')
-    # email = email_response.get('mail')
-    # if email:
-    #     await custom_browser.load_cookies(email)
+    kopeechka_client = KopeechkaClient(api_token)
+    email_response = kopeechka_client.get_email(site_to_register)
+    email_id = email_response.get('id')
+    email = email_response.get('mail')
+    if email:
+        await custom_browser.load_cookies(email)
+        registration_automation = RegistrationAutomationPyppeteer(custom_browser, email, logger)
+        await registration_automation.registration(REGISTRATION_URL, SUCCESS_URL)
+        logger.info("Ожидание письма...")
+        time.sleep(5)
+        message_response = kopeechka_client.get_message(email_id)
+        attempts = 0
+        while "WAIT_LINK" in message_response.get('value', '') and attempts < 3:
+            logger.info("Письмо не найдено, отправка повторного запроса...")
+            time.sleep(10)
+            message_response = kopeechka_client.get_message(email_id)
+            attempts += 1
 
-        # Регистрация (если требуется)
-        # registration_automation = RegistrationAutomationPyppeteer(custom_browser, email, logger)
-        # await registration_automation.registration(REGISTRATION_URL, SUCCESS_URL)
-        # logger.info("Ожидание письма...")
-        # time.sleep(10)
-        # message_response = kopeechka_client.get_message(email_id)
-        # logger.debug(message_response)
-        # attempts = 0
-        # while "WAIT_LINK" in message_response.get('value', '') and attempts < 3:
-        #     logger.info("Письмо не найдено, отправка повторного запроса...")
-        #     time.sleep(10)
-        #     message_response = kopeechka_client.get_message(email_id)
-        #     attempts += 1
-        #
-        # if attempts == 3 and "WAIT_LINK" in message_response.get('value', ''):
-        #     logger.error("Письмо так и не было получено после трех попыток.")
-        #     kopeechka_client.cancel_email(email_id)
-        #     logger.info(f"Почтовый адрес {email} отменен.")
-        #
-        # # Обработка письма, если оно было получено
-        # if message_response.get('status', '') == 'OK':
-        #     html_content = message_response.get('fullmessage')
-        #     login, password = kopeechka_client.extract_login_password(html_content)
-        #     if login and password:
-        #         write_credentials_to_file(filename, login, password)
-        #         logger.success(f'Учетные данные сохранены: {login}, {password}')
-            # Логин
-    login = 'tedarceneaux62738@outlook.at'
-    password = 'SRZ8WQ59'
-    await custom_browser.load_cookies(login)
-    login_automation = LoginAutomationPyppeteer(custom_browser, login, password, logger)
-    cookies_dict, auth_token = await login_automation.login(LOGIN_URL, START_URL, BAD_URL, URL_KEYWORD)
+        if attempts == 3 and "WAIT_LINK" in message_response.get('value', ''):
+            logger.error("Письмо так и не было получено после трех попыток.")
+            kopeechka_client.cancel_email(email_id)
+            logger.info(f"Почтовый адрес {email} отменен.")
 
-    # Сохраняем куки сразу после успешного логина, до закрытия браузера
-    if cookies_dict:
-        await custom_browser.save_cookies(login)
+        # Обработка письма, если оно было получено
+        if message_response.get('status', '') == 'OK':
+            html_content = message_response.get('fullmessage')
+            login, password = kopeechka_client.extract_login_password(html_content)
+            if login and password:
+                write_credentials_to_file(filename, login, password)
+                logger.success(f'Учетные данные сохранены: {login}, {password}')
 
-    # Закрываем браузер только после выполнения всех необходимых действий
-    await custom_browser.close_browser()
+
+                login_automation = LoginAutomationPyppeteer(custom_browser, login, password, logger)
+                cookies_dict, auth_token = await login_automation.login(LOGIN_URL, START_URL, BAD_URL, URL_KEYWORD)
+
+                # Сохраняем куки сразу после успешного логина, до закрытия браузера
+                if cookies_dict:
+                    await custom_browser.save_cookies(login)
+
+                await custom_browser.close_browser()
 
 if __name__ == "__main__":
     asyncio.run(main())
