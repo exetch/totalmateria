@@ -14,7 +14,7 @@ class LoginAutomationPyppeteer:
         self.submit_button_id = "orderForm_btn_login_KTM"
 
 
-    async def login(self, login_url, start_url, bad_url, url_keyword):
+    async def login(self, login_url, start_url, bad_url):
 
         await self.custom_browser.start_browser()
         try:

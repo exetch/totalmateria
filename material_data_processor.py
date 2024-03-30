@@ -99,6 +99,7 @@ class MaterialDataProcessor:
 
 
     def process_response_files(self):
+        all_processed = True
         for dirpath, dirs, filenames in os.walk(self.project_root):
             for filename in filenames:
                 if filename.endswith('_response.json'):
@@ -111,10 +112,12 @@ class MaterialDataProcessor:
 
                     for material_id in material_ids[:10]:  # Ограничиваем количество материалов для обработки до 10
                         if material_id not in processed_materials:
+                            all_processed = False
                             fetch_and_save_result = self.fetch_and_save_material_properties(material_id, properties_dir)
                             if fetch_and_save_result == 401:
                                 return fetch_and_save_result
                             elif not fetch_and_save_result:
                                 return
                             self.update_processed_materials(processed_materials_path, material_id)
-
+        if all_processed:
+            return "All materials processed"
