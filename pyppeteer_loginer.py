@@ -21,7 +21,7 @@ class LoginAutomationPyppeteer:
             self.logger.info(f"Переход на страницу входа: {login_url}")
 
             await self.custom_browser.page.goto(login_url, {'waitUntil': 'networkidle2'})
-            await self.custom_browser.load_cookies(self.email)
+            # await self.custom_browser.load_cookies(self.email)
             self.logger.info("Ввод email и пароля...")
             await self.custom_browser.page.type(f'#{self.email_field_id}', self.email)
             await self.custom_browser.page.type(f'#{self.password_field_id}', self.password)
@@ -37,24 +37,22 @@ class LoginAutomationPyppeteer:
                     '''() => document.querySelector('#orderForm_Message').innerText'''
                 )
                 self.logger.error(f"Обнаружена ошибка при регистрации: {error_message}")
+                await self.custom_browser.close_browser()
                 return None, None
             except Exception as e:
-                self.logger.error(f"Произошла ошибка при ожидании входа: {e}")
+                self.logger.success(f"Почта не забанена! Успех")
 
-            # Пытаемся залогиниться
+            await asyncio.sleep(30)
             try:
-                await self.custom_browser.page.waitForNavigation({'timeout': 25000, 'waitUntil': 'networkidle0'})
                 current_url = self.custom_browser.page.url
-                if current_url == start_url or current_url == 'https://portal.totalmateria.com/ru/search/quick':
+                if 'portal.totalmateria.com' in current_url:
                     self.logger.success(f"Успешно перешли на {start_url}")
-                elif current_url == bad_url:
-                    self.logger.error("Ошибка входа, перенаправлено на bad_url.")
+                elif 'TrialConfirm' in current_url:
+                    self.logger.error("Ошибка входа, логины кончились.")
+                    await self.custom_browser.close_browser()
                     return None, None
-                else:
-                    self.logger.warning(f"Переход на неизвестный URL: {current_url}")
             except Exception as e:
-                self.logger.error(f"Произошла ошибка при ожидании входа: {e}")
-            await asyncio.sleep(20)
+                self.logger.error(f"Произошла ошибка при ожидании завершения входа: {e}")
 
             # Ищем токен авторизации и куки
             access_token = await self.custom_browser.page.evaluate('''() => {
@@ -66,10 +64,13 @@ class LoginAutomationPyppeteer:
                 self.logger.error("Access token не найден в LocalStorage.")
 
             cookies = await self.custom_browser.page.cookies()
+            cookies_dict = {}
+            for cookie in cookies:
+                cookies_dict[cookie['name']] = cookie ['value']
 
 
             if self.auth_token:
-                self.logger.info(f"Токен авторизации успешно получен: {self.auth_token}")
+                self.logger.success(f"Токен авторизации успешно получен!")
                 headers_dict = {
                     'Accept': 'application/json, text/plain, */*',
                     'Accept-Language': 'ru-RU,ru;q=0.9',
@@ -88,9 +89,10 @@ class LoginAutomationPyppeteer:
                 }
             else:
                 self.logger.error("Токен авторизации не был получен.")
-            return cookies, headers_dict
+            await self.custom_browser.close_browser()
+            return cookies_dict, headers_dict
         except Exception as e:
             self.logger.error(f"Произошла ошибка во время процесса входа: {e}")
 
-
+        await self.custom_browser.close_browser()
 

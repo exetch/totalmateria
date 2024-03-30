@@ -2,7 +2,7 @@ import asyncio
 import os
 import time
 from datetime import datetime
-
+import requests
 from kopeechka import KopeechkaClient
 from loguru import logger
 from custom_browser import CustomBrowser, FingerprintManager
@@ -19,19 +19,16 @@ PROXY_USER = os.getenv('PROXY_USER')
 PROXY_PASS = os.getenv('PROXY_PASS')
 PROXY_SETTINGS = PROXY_HOST + ':' + PROXY_PORT
 CHROME_EXECUTABLE_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-PROXY_FOR_REQUSTS = PROXY_SETTINGS + '@' + PROXY_USER + ':' + PROXY_PASS
-fingerprint_manager = FingerprintManager(browser='safari', os='ios')
-fingerprint = fingerprint_manager.generate_fingerprint()
+PROXY_FOR_REQUSTS = 'http://' + PROXY_USER + ':' + PROXY_PASS + '@' + PROXY_SETTINGS
+MAX_LOGIN_ATTEMPTS = 5
 
-# # Создаем экземпляр CustomBrowser
-custom_browser = CustomBrowser(PROXY_SETTINGS, PROXY_USER, PROXY_PASS, fingerprint, logger)
 
 REGISTRATION_URL = 'https://www.totalmateria.com/page.aspx?ID=Register&LN=RU'
 SUCCESS_URL = 'https://www.totalmateria.com/page.aspx?id=RegisterConfirmation&LN=RU'
 LOGIN_URL = 'https://www.totalmateria.com/page.aspx?ID=Login&LN=RU'
 START_URL = 'https://portal.totalmateria.com/'
 BAD_URL = 'https://www.totalmateria.com/page.aspx?ID=TrialConfirm&LN=RU'
-URL_KEYWORD = 'identity/connect/token'
+CHANGE_IP_URL = 'https://changeip.mobileproxy.space/?proxy_key=c60aea12d2bd5902c95813a98273a37d&format=json'
 api_token = os.getenv('KOPEECHKA_API')
 kopeechka_client = KopeechkaClient(api_token)
 site_to_register = 'https://www.totalmateria.com/'
@@ -48,8 +45,20 @@ def write_credentials_to_file(filename, login, password):
         file.write('-------------------------\n\n')
 
 async def main():
+    fingerprint_manager = FingerprintManager(browser='safari', os='ios')
+    fingerprint = fingerprint_manager.generate_fingerprint()
+    custom_browser = CustomBrowser(PROXY_SETTINGS, PROXY_USER, PROXY_PASS, fingerprint, logger)
     kopeechka_client = KopeechkaClient(api_token)
-    email_response = kopeechka_client.get_email(site_to_register)
+    while True:
+        response = requests.get(CHANGE_IP_URL)
+        if response.json().get('status') == 'OK':
+            break
+    new_ip = response.json().get('new_ip')
+    logger.info(f'IP успешно изменен: {new_ip}')
+    while True:
+        email_response = kopeechka_client.get_email(site_to_register)
+        if email_response.get('status') == 'OK':
+            break
     email_id = email_response.get('id')
     email = email_response.get('mail')
     if email:
@@ -80,22 +89,20 @@ async def main():
                 write_credentials_to_file(filename, login, password)
                 logger.success(f'Учетные данные сохранены: {login}, {password}')
 
+            login_attempts = 0
+            while login_attempts < MAX_LOGIN_ATTEMPTS:
                 login_automation = LoginAutomationPyppeteer(custom_browser, login, password, logger)
                 cookies_dict, headers = await login_automation.login(LOGIN_URL, START_URL, BAD_URL, URL_KEYWORD)
-
                 if cookies_dict is not None and headers is not None:
+                    login_attempts += 1
                     processor = MaterialDataProcessor(PROXY_FOR_REQUSTS, project_root, cookies_dict, headers, logger)
-                    success = processor.process_response_files()
-                    if success:
-                        logger.info("Обработка данных успешно завершена.")
-                    else:
-                        logger.error("Ошибка при обработке данных.")
+                    process_result = processor.process_response_files()
+                    logger.info(process_result)
 
-                # # Сохраняем куки сразу после успешного логина, до закрытия браузера
-                # if cookies_dict:
-                #     await custom_browser.save_cookies(login)
+                    if process_result == 401:
+                        continue
+            logger.info("Логины исчерпаны. Регистрируем новый аккаунт")
 
-                await custom_browser.close_browser()
 
 if __name__ == "__main__":
     asyncio.run(main())

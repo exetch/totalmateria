@@ -178,7 +178,7 @@ class RegistrationAutomationPyppeteer:
         await self.custom_browser.page.evaluate(f'document.querySelector("{submit_button_selector}").click()')
         # await self.custom_browser.page.waitForSelector(submit_button_selector, {'timeout': 5000})
         # await self.custom_browser.page.click(submit_button_selector)
-        await asyncio.sleep(2)
+        # await asyncio.sleep(2)
         self.logger.info(f"Кнопка 'Запросить' нажата.")
 
         if not await self.check_registration_errors():

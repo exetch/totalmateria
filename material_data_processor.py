@@ -49,8 +49,8 @@ class MaterialDataProcessor:
                     response.raise_for_status()
 
                     if response.status_code == 401:
-                        logger.info("Unauthorized access detected. Please re-login with new session cookies and headers.")
-                        return (1, 2)
+                        self.logger.info("Unauthorized access detected. Please re-login with new session cookies and headers.")
+                        return 401
 
                     file_path = os.path.join(properties_dir, f'{material_id}_{prop_type}.json')
                     with open(file_path, 'w', encoding='utf-8') as file:
@@ -77,6 +77,9 @@ class MaterialDataProcessor:
 
                 except requests.exceptions.HTTPError as e:
                     logger.error(f"HTTP Error fetching properties for material ID {material_id}: {e}")
+                    if response.status_code == 401:
+                        self.logger.info("Unauthorized access detected. Please re-login with new session cookies and headers.")
+                        return 401
                     return False
 
                 if attempt == 5:  # прекращаем выполнение скрипта после 5 попыток
@@ -108,8 +111,10 @@ class MaterialDataProcessor:
 
                     for material_id in material_ids[:10]:  # Ограничиваем количество материалов для обработки до 10
                         if material_id not in processed_materials:
-                            success = self.fetch_and_save_material_properties(material_id, properties_dir)
-                            if not success:
+                            fetch_and_save_result = self.fetch_and_save_material_properties(material_id, properties_dir)
+                            if fetch_and_save_result == 401:
+                                return fetch_and_save_result
+                            elif not fetch_and_save_result:
                                 return
                             self.update_processed_materials(processed_materials_path, material_id)
 
