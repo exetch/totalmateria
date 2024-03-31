@@ -4,7 +4,6 @@ from loguru import logger
 
 
 # Функция убирающая недопустимые символы
-
 def sanitize_filename(filename):
 
     for char in r'\<>:"/|?*':
@@ -17,7 +16,6 @@ def sanitize_filename(filename):
 
 
 # Функция для создания и записи в файл свойств
-
 def write_properties_to_file(group_name, property_names, root):
     # Создаем имя файла, очищая его от недопустимых символов
 
@@ -42,7 +40,6 @@ def write_properties_to_file(group_name, property_names, root):
 
 
 # Функция для сбора свойств из JSON файлов
-
 def collect_properties_from_json(files):
     property_names = set()
 
@@ -99,7 +96,6 @@ def delete_txt_files(directory):
 
 def combine_properties(root):
     combined_properties = {}
-
     for subdir, dirs, files in os.walk(root, topdown=False):
         properties_set = set()
 
@@ -123,7 +119,7 @@ def combine_properties(root):
         logger.info(f"Combined properties written to: {properties_file}")
 
 if __name__ == "__main__":
-    project_root = 'C:\\Users\\ASUS\\PycharmProjects\\totalmateria\\base_directory'  # Замените на ваш путь к проекту
+    project_root = 'C:\\Users\\ASUS\\PycharmProjects\\totalmateria\\base_directory'  # Замени на свой путь к проекту
 
     logger.add("process_log_{time}.log", rotation="1 week")
     delete_txt_files(project_root)
